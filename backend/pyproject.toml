@@ -1,0 +1,27 @@
+[project]
+name = "test-papernest"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "django-cors-headers>=4.9.0",
+    "django-ninja>=1.7.0",
+    "httpx>=0.28.1",
+    "ruff>=0.16.6",
+    "ty>=0.0.80",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-django>=4.14.0",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "network_coverage.settings"
+
+[tool.coverage.run]
+source = ["network_coverage", "network_coverage_service"]
+omit = ["*/tests/*", "*/migrations/*"]
