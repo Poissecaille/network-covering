@@ -10,6 +10,7 @@ dependencies = [
     "httpx>=0.28.1",
     "ruff>=0.16.6",
     "ty>=0.0.80",
+    "uvicorn[standard]>=0.38.0",
 ]
 
 [dependency-groups]

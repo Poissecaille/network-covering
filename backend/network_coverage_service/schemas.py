@@ -12,7 +12,8 @@ class GeocodeQuery(Schema):
 class CoverageRequest(RootModel[dict[str, str]]):
     def to_queries_object(self) -> list[GeocodeQuery]:
         return [
-            GeocodeQuery(id=id_, address=address) for id_, address in self.root.items()
+            GeocodeQuery(id=address_id, address=address_name)
+            for address_id, address_name in self.root.items()
         ]
 
 

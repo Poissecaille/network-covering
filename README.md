@@ -18,8 +18,9 @@ API backend + interface web  qui calcule, pour une ou plusieurs adresses, la cou
 ```bash
 cd backend
 uv sync
-uv run python manage.py runserver
+uv run uvicorn network_coverage.asgi:application --reload
 ```
+
 L'API est alors disponible sur `http://localhost:8000/api/coverage`, avec une documentation interactive (ReDoc) sur `http://localhost:8000/api/docs`.
 L'API est configurée en mode debug (django) pour faciliter la lecture des routes.
 

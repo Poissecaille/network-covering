@@ -17,5 +17,7 @@ wheels/
 
 # test html coverage reports
 htmlcov/
+.coverage
 
+# test files
 test.csv

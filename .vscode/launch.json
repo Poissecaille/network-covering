@@ -12,16 +12,17 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Python Debugger: Django",
+            "name": "Python Debugger: Django (ASGI / uvicorn)",
             "type": "debugpy",
             "request": "launch",
+            "module": "uvicorn",
             "args": [
-                "runserver",
-                "--noreload"
+                "network_coverage.asgi:application"
             ],
+            "cwd": "${workspaceFolder}/backend",
             "django": true,
             "autoStartBrowser": false,
-            "program": "${workspaceFolder}\\backend\\manage.py"
+            "console": "integratedTerminal",
         },
         {
             "name": "Frontend: npm run dev",
