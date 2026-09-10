@@ -1,0 +1,44 @@
+main {
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: sans-serif;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+input {
+  flex: 1;
+  padding: 0.5rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+}
+
+.error {
+  color: #b00020;
+}
+
+.operator {
+  margin-bottom: 1rem;
+}
+
+.operator ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.status-ok {
+  color: #1a7f37;
+  font-weight: bold;
+}
+
+.status-ko {
+  color: #b00020;
+  font-weight: bold;
+}
