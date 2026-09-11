@@ -34,13 +34,15 @@ class GeocodingClient:
                     GeocodeResult(id=query.id, **cached.model_dump(exclude={"id"}))
                 )
 
-        new_results = await self._fetch(missing) if missing else []
+        new_results = await self._fetch_geocode_data(missing) if missing else []
         for query, result in zip(missing, new_results):
             cache.set(self._cache_key(query.address), result, timeout=self.CACHE_TTL)
 
         return cached_results + new_results
 
-    async def _fetch(self, queries: list[GeocodeQuery]) -> list[GeocodeResult]:
+    async def _fetch_geocode_data(
+        self, queries: list[GeocodeQuery]
+    ) -> list[GeocodeResult]:
         files = {"data": ("addresses.csv", self.mapper.to_csv(queries), "text/csv")}
         data = {
             "columns": "address",
