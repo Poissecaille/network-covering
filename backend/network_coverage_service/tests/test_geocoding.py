@@ -20,20 +20,24 @@ class GeocodingClientCacheTests(SimpleTestCase):
     async def test_calls_the_api_when_address_is_not_cached(self):
         fake_result = GeocodeResult(id="id1", found=True, x=1.0, y=2.0)
         with patch.object(
-            GeocodingClient, "_fetch_geocode_data ", new=AsyncMock(return_value=[fake_result])
-        ) as mocked_fetch_geocode_data :
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fake_result]),
+        ) as mocked_fetch_geocode_data:
             results = await self.geocoding_client.geocode_addresses(
                 [GeocodeQuery(id="id1", address="1 rue de Paris")]
             )
 
-        mocked_fetch_geocode_data .assert_awaited_once()
+        mocked_fetch_geocode_data.assert_awaited_once()
         self.assertEqual(results, [fake_result])
 
     async def test_second_call_for_the_same_address_uses_the_cache(self):
         fake_result = GeocodeResult(id="id1", found=True, x=1.0, y=2.0)
         with patch.object(
-            GeocodingClient, "_fetch_geocode_data ", new=AsyncMock(return_value=[fake_result])
-        ) as mocked_fetch_geocode_data :
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fake_result]),
+        ) as mocked_fetch_geocode_data:
             await self.geocoding_client.geocode_addresses(
                 [GeocodeQuery(id="id1", address="1 rue de Paris")]
             )
@@ -41,12 +45,14 @@ class GeocodingClientCacheTests(SimpleTestCase):
                 [GeocodeQuery(id="id9", address="1 rue de Paris")]
             )
 
-        mocked_fetch_geocode_data .assert_awaited_once()
+        mocked_fetch_geocode_data.assert_awaited_once()
 
     async def test_cached_result_is_relabeled_with_the_current_query_id(self):
         fake_result = GeocodeResult(id="id1", found=True, x=1.0, y=2.0)
         with patch.object(
-            GeocodingClient, "_fetch_geocode_data ", new=AsyncMock(return_value=[fake_result])
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fake_result]),
         ):
             await self.geocoding_client.geocode_addresses(
                 [GeocodeQuery(id="id1", address="1 rue de Paris")]
@@ -64,15 +70,19 @@ class GeocodingClientCacheTests(SimpleTestCase):
         fresh_result = GeocodeResult(id="id2", found=True, x=3.0, y=4.0)
 
         with patch.object(
-            GeocodingClient, "_fetch_geocode_data ", new=AsyncMock(return_value=[cached_result])
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[cached_result]),
         ):
             await self.geocoding_client.geocode_addresses(
                 [GeocodeQuery(id="id1", address="1 rue de Paris")]
             )
 
         with patch.object(
-            GeocodingClient, "_fetch_geocode_data ", new=AsyncMock(return_value=[fresh_result])
-        ) as mocked_fetch_geocode_data :
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fresh_result]),
+        ) as mocked_fetch_geocode_data:
             await self.geocoding_client.geocode_addresses(
                 [
                     GeocodeQuery(id="id1", address="1 rue de Paris"),
@@ -80,13 +90,15 @@ class GeocodingClientCacheTests(SimpleTestCase):
                 ]
             )
 
-        mocked_fetch_geocode_data .assert_awaited_once_with(
+        mocked_fetch_geocode_data.assert_awaited_once_with(
             [GeocodeQuery(id="id2", address="2 rue de Paris")]
         )
 
 
 class FetchTests(SimpleTestCase):
-    async def test_fetch_geocode_data _sends_the_request_and_parses_the_csv_response(self):
+    async def test_fetch_geocode_data_sends_the_request_and_parses_the_csv_response(
+        self,
+    ):
         client = GeocodingClient()
         queries = [
             GeocodeQuery(id="id1", address="157 boulevard Mac Donald 75019 Paris")
@@ -103,7 +115,7 @@ class FetchTests(SimpleTestCase):
         with patch(
             "httpx.AsyncClient.post", new=AsyncMock(return_value=fake_response)
         ) as mocked_post:
-            results = await client._fetch_geocode_data (queries)
+            results = await client._fetch_geocode_data(queries)
 
         fake_response.raise_for_status.assert_called_once()
 
@@ -119,7 +131,9 @@ class FetchTests(SimpleTestCase):
         self.assertIn("result_y", kwargs["data"]["result_columns"])
         self.assertIn("data", kwargs["files"])
 
-    async def test_fetch_geocode_data _raises_geocoding_service_unavailable_on_network_error(self):
+    async def test_fetch_geocode_data_raises_geocoding_service_unavailable_on_network_error(
+        self,
+    ):
         client = GeocodingClient()
         queries = [GeocodeQuery(id="id1", address="1 rue de Paris")]
 
@@ -127,9 +141,9 @@ class FetchTests(SimpleTestCase):
             "httpx.AsyncClient.post",
             new=AsyncMock(side_effect=httpx.ConnectError("connection refused")),
         ), self.assertRaises(GeocodingServiceUnavailableError):
-            await client._fetch_geocode_data (queries)
+            await client._fetch_geocode_data(queries)
 
-    async def test_fetch_geocode_data _raises_geocoding_service_unavailable_on_http_error_status(
+    async def test_fetch_geocode_data_raises_geocoding_service_unavailable_on_http_error_status(
         self,
     ):
         client = GeocodingClient()
@@ -144,9 +158,11 @@ class FetchTests(SimpleTestCase):
             patch("httpx.AsyncClient.post", new=AsyncMock(return_value=fake_response)),
             self.assertRaises(GeocodingServiceUnavailableError),
         ):
-            await client._fetch_geocode_data (queries)
+            await client._fetch_geocode_data(queries)
 
-    async def test_fetch_geocode_data _raises_geocoding_response_format_error_on_malformed_csv(self):
+    async def test_fetch_geocode_data_raises_geocoding_response_format_error_on_malformed_csv(
+        self,
+    ):
         client = GeocodingClient()
         queries = [GeocodeQuery(id="id1", address="1 rue de Paris")]
 
@@ -159,7 +175,7 @@ class FetchTests(SimpleTestCase):
             patch("httpx.AsyncClient.post", new=AsyncMock(return_value=fake_response)),
             self.assertRaises(GeocodingResponseFormatError),
         ):
-            await client._fetch_geocode_data (queries)
+            await client._fetch_geocode_data(queries)
 
 
 class GeocodingClientCacheKeyTests(SimpleTestCase):
