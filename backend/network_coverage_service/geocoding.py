@@ -18,6 +18,7 @@ class GeocodingClient:
 
     def __init__(self, mapper: GeocodingCsvMapper | None = None) -> None:
         self.mapper = mapper or GeocodingCsvMapper()
+        self._http_client = httpx.AsyncClient()
 
     async def geocode_addresses(
         self, queries: list[GeocodeQuery]
@@ -34,9 +35,24 @@ class GeocodingClient:
                     GeocodeResult(id=query.id, **cached.model_dump(exclude={"id"}))
                 )
 
-        new_results = await self._fetch_geocode_data(missing) if missing else []
-        for query, result in zip(missing, new_results):
+        unique_missing = self._deduplicate_by_address(missing)
+
+        fetched = (
+            await self._fetch_geocode_data(unique_missing) if unique_missing else []
+        )
+
+        results_by_address = {}
+        for query, result in zip(unique_missing, fetched):
             cache.set(self._cache_key(query.address), result, timeout=self.CACHE_TTL)
+            results_by_address[query.address] = result
+
+        new_results = [
+            GeocodeResult(
+                id=query.id,
+                **results_by_address[query.address].model_dump(exclude={"id"}),
+            )
+            for query in missing
+        ]
 
         return cached_results + new_results
 
@@ -56,9 +72,10 @@ class GeocodingClient:
             ],
         }
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(self.api_url, data=data, files=files)
-                response.raise_for_status()
+            response = await self._http_client.post(
+                self.api_url, data=data, files=files
+            )
+            response.raise_for_status()
         except httpx.HTTPError as exc:
             raise GeocodingServiceUnavailableError(str(exc)) from exc
 
@@ -66,6 +83,17 @@ class GeocodingClient:
             return self.mapper.from_csv(response.content)
         except (KeyError, ValueError) as exc:
             raise GeocodingResponseFormatError(str(exc)) from exc
+
+    def _deduplicate_by_address(
+        self, queries: list[GeocodeQuery]
+    ) -> list[GeocodeQuery]:
+        seen_addresses = set()
+        unique_queries = []
+        for query in queries:
+            if query.address not in seen_addresses:
+                seen_addresses.add(query.address)
+                unique_queries.append(query)
+        return unique_queries
 
     def _cache_key(self, address: str) -> str:
         normalized = address.strip().lower()

@@ -94,6 +94,55 @@ class GeocodingClientCacheTests(SimpleTestCase):
             [GeocodeQuery(id="id2", address="2 rue de Paris")]
         )
 
+    async def test_duplicate_addresses_in_a_single_call_are_sent_once(self):
+        fake_result = GeocodeResult(id="id1", found=True, x=1.0, y=2.0)
+        with patch.object(
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fake_result]),
+        ) as mocked_fetch_geocode_data:
+            results = await self.geocoding_client.geocode_addresses(
+                [
+                    GeocodeQuery(id="id1", address="1 rue de Paris"),
+                    GeocodeQuery(id="id2", address="1 rue de Paris"),
+                ]
+            )
+
+        mocked_fetch_geocode_data.assert_awaited_once_with(
+            [GeocodeQuery(id="id1", address="1 rue de Paris")]
+        )
+        self.assertEqual({result.id for result in results}, {"id1", "id2"})
+        for result in results:
+            self.assertEqual(result.x, 1.0)
+            self.assertEqual(result.y, 2.0)
+
+    async def test_duplicate_addresses_populate_the_cache_for_later_calls(self):
+        fake_result = GeocodeResult(id="id1", found=True, x=1.0, y=2.0)
+        with patch.object(
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[fake_result]),
+        ):
+            await self.geocoding_client.geocode_addresses(
+                [
+                    GeocodeQuery(id="id1", address="1 rue de Paris"),
+                    GeocodeQuery(id="id2", address="1 rue de Paris"),
+                ]
+            )
+
+        with patch.object(
+            GeocodingClient,
+            "_fetch_geocode_data",
+            new=AsyncMock(return_value=[]),
+        ) as mocked_fetch_geocode_data:
+            results = await self.geocoding_client.geocode_addresses(
+                [GeocodeQuery(id="id3", address="1 rue de Paris")]
+            )
+
+        mocked_fetch_geocode_data.assert_not_awaited()
+        self.assertEqual(results[0].id, "id3")
+        self.assertEqual(results[0].x, 1.0)
+
 
 class FetchTests(SimpleTestCase):
     async def test_fetch_geocode_data_sends_the_request_and_parses_the_csv_response(
